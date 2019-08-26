@@ -1,6 +1,6 @@
 const express = require('express');
 const bodyParser = require('body-parser');
-const bcrypt = require('bcrypt-nodejs');
+const bcrypt = require('bcryptjs');
 const cors = require('cors');
 const knex = require('knex');
 
@@ -28,7 +28,7 @@ app.post('/signin', (req, res) => {
 	db('hash', 'email').from('login')
 		.where('email','=', req.body.email)
 		.then(data => {
-			console.log(data);
+			console.log(data, req.body);
 			const isValid = bcrypt.compareSync(req.body.password, data[0].hash);
 			console.log(isValid);
 			if (isValid) {
@@ -48,7 +48,8 @@ app.post('/signin', (req, res) => {
 
 app.post('/register', (req,res) => {
 	const { email, name, password } = req.body;
-	const hash = bcrypt.hashSync("password");
+	const salt = bcrypt.genSaltSync(10);
+	const hash = bcrypt.hashSync(req.body.password, salt);
 	db.transaction(trx => {
 		trx.insert({
 			hash:  hash,
